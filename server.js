@@ -3,7 +3,7 @@ var http = require('http'),
       'Access-Control-Allow-Origin'  : '*',
       'Access-Control-Allow-Methods' : 'POST, GET, PUT, DELETE, OPTIONS',
       'Access-Control-Max-Age'       : '86400', // 24 hours
-      'Access-Control-Allow-Headers' : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept'
+      'Access-Control-Allow-Headers' : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization'
     },
     passed_domain = false;
 
@@ -17,7 +17,7 @@ for (var i=2; i < process.argv.length; i++) {
       passed_domain = process.argv[i];
       break;
     default:
-      console.log('Dunno what to do with param: '+process.argv[i]) 
+      console.log('Dunno what to do with param: '+process.argv[i])
   }
 };
 
@@ -28,19 +28,19 @@ http.createServer(function(request, response) {
     response.end();
     return;
   }
-  
+
   request.headers['host']  = (passed_domain || request.headers['host'])
                               // remove port
                               .replace(/\:.*$/,'')
                               // proxy.example.com => example.com
                               .replace(/proxy\./,'');
-  
+
   console.log(request.headers['host'], request.method, request.url);
-  
-  var proxy = http.createClient(80, request.headers['host']);
+
+  var proxy = http.createClient(5984, request.headers['host']);
   var proxy_request = proxy.request(request.method, request.url, request.headers);
-  
-  
+
+
   proxy_request.addListener('response', function (proxy_response) {
     proxy_response.addListener('data', function(chunk) {
       response.write(chunk, 'binary');
